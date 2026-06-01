@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VaultChat">
+<meta name="theme-color" content="#0a0e1a">
+<link rel="manifest" href="manifest.json">
+<title>VaultChat</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0e1a;--surf:#111827;--surf2:#1a2235;--surf3:#1f2a40;
+  --b1:#1e2d4a;--b2:#2a3f5f;
+  --acc:#00d4ff;--acc2:#0099cc;
+  --grn:#00ff88;--red:#ff4466;--ylw:#ffcc00;
+  --txt:#e8eef8;--txt2:#8899bb;--txt3:#445577;
+  --st:env(safe-area-inset-top,0px);
+  --sb:env(safe-area-inset-bottom,0px);
+}
+html{height:100%;height:-webkit-fill-available}
+body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;height:100%;height:-webkit-fill-available;overflow:hidden;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+.screen{display:none;flex-direction:column;height:100%;height:-webkit-fill-available}
+.screen.on{display:flex}
+
+/* ── LOCK ── */
+#sLock{align-items:center;justify-content:center;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px;padding-top:calc(var(--st)+24px);padding-bottom:calc(var(--sb)+24px)}
+.card{background:var(--surf);border:1px solid var(--b2);border-radius:20px;padding:28px 22px;width:100%;max-width:400px}
+.logo{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.logo-box{width:48px;height:48px;min-width:48px;background:linear-gradient(135deg,var(--acc2),#005580);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px}
+.logo-title{font-family:monospace;font-size:21px;font-weight:700;color:var(--txt)}
+.logo-sub{font-size:11px;color:var(--txt2);margin-top:2px}
+.flabel{font-size:11px;font-weight:600;color:var(--txt2);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:7px}
+.fg{margin-bottom:18px}
+.inp{width:100%;background:var(--surf2);border:1.5px solid var(--b2);border-radius:10px;padding:14px;font-family:monospace;font-size:14px;color:var(--txt);outline:none;-webkit-appearance:none;transition:border-color .2s}
+.inp:focus{border-color:var(--acc)}
+.inp::placeholder{color:var(--txt3)}
+.kbar{height:3px;border-radius:2px;margin-top:6px;transition:width .3s,background .3s;background:var(--b1);width:0}
+.pbtn{width:100%;padding:16px;background:var(--acc);color:#000;border:none;border-radius:10px;font-family:monospace;font-size:14px;font-weight:700;cursor:pointer;-webkit-appearance:none;touch-action:manipulation;transition:background .15s,transform .1s;letter-spacing:.3px}
+.pbtn:active{background:var(--acc2);transform:scale(.98)}
+.pbtn.ghost{background:transparent;color:var(--txt2);border:1.5px solid var(--b2);margin-top:10px}
+.pbtn.ghost:active{background:var(--surf2)}
+.err{font-size:12px;color:var(--red);text-align:center;margin-top:10px;min-height:18px}
+.enc-row{display:flex;align-items:center;gap:8px;margin-top:18px;padding:10px 12px;background:var(--surf2);border-radius:10px;border:1px solid var(--b1)}
+.edot{width:7px;height:7px;border-radius:50%;background:var(--grn);animation:pulse 2s infinite;flex-shrink:0}
+.enc-lbl{font-size:10px;font-family:monospace;color:var(--grn)}
+.enc-det{font-size:9px;color:var(--txt3);margin-left:auto;text-align:right;line-height:1.5}
+
+/* ── WAITING ── */
+#sWait{align-items:center;justify-content:center;padding:20px;padding-top:calc(var(--st)+24px);padding-bottom:calc(var(--sb)+24px)}
+.wait-card{background:var(--surf);border:1px solid var(--b2);border-radius:20px;padding:32px 24px;width:100%;max-width:400px;text-align:center}
+.wait-title{font-family:monospace;font-size:14px;font-weight:700;color:var(--txt);margin-bottom:24px}
+.room-code{font-size:56px;font-family:monospace;font-weight:700;color:var(--grn);letter-spacing:8px;margin:8px 0 6px;text-shadow:0 0 30px rgba(0,255,136,.25)}
+.room-label{font-size:10px;color:var(--txt3);font-family:monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:24px}
+.share-row{display:flex;gap:8px;margin-bottom:20px}
+.share-btn{flex:1;padding:13px;border-radius:10px;font-family:monospace;font-size:12px;font-weight:600;cursor:pointer;border:none;touch-action:manipulation;transition:transform .1s,background .15s}
+.share-btn:active{transform:scale(.97)}
+.copy-btn-main{background:var(--acc);color:#000}
+.copy-btn-main:active{background:var(--acc2)}
+.sms-btn{background:var(--surf2);color:var(--txt2);border:1.5px solid var(--b2)!important;border:none}
+.wait-status{font-size:11px;font-family:monospace;color:var(--txt2);display:flex;align-items:center;justify-content:center;gap:7px;margin-top:4px}
+.spinner{width:14px;height:14px;border:2px solid var(--b2);border-top-color:var(--acc);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.or-divider{display:flex;align-items:center;gap:10px;margin:18px 0;font-size:10px;color:var(--txt3);font-family:monospace}
+.or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:var(--b1)}
+.join-row{display:flex;gap:8px}
+.code-inp{flex:1;background:var(--surf2);border:1.5px solid var(--b2);border-radius:10px;padding:14px;font-family:monospace;font-size:22px;font-weight:700;color:var(--txt);outline:none;-webkit-appearance:none;text-align:center;letter-spacing:6px;transition:border-color .2s;width:0}
+.code-inp:focus{border-color:var(--acc)}
+.code-inp::placeholder{color:var(--txt3);letter-spacing:2px;font-size:14px}
+.join-go{padding:14px 20px;background:var(--grn);color:#000;border:none;border-radius:10px;font-family:monospace;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap;transition:background .15s,transform .1s}
+.join-go:active{transform:scale(.96)}
+
+/* ── CHAT ── */
+#sChat{overflow:hidden}
+#topbar{background:var(--surf);border-bottom:1px solid var(--b1);padding:0 14px 8px;display:flex;align-items:flex-end;gap:10px;flex-shrink:0;padding-top:calc(var(--st)+4px);min-height:calc(54px + var(--st))}
+.tb-logo{font-family:monospace;font-size:15px;font-weight:700;color:var(--acc)}
+.tb-room{font-size:11px;color:var(--txt2);font-family:monospace;background:var(--surf2);padding:4px 10px;border-radius:20px;border:1px solid var(--b2)}
+.tb-enc{display:flex;align-items:center;gap:5px;padding:4px 9px;background:rgba(0,255,136,.07);border:1px solid rgba(0,255,136,.17);border-radius:20px}
+.tb-enc span{font-size:10px;color:var(--grn);font-family:monospace}
+.tb-conn{display:flex;align-items:center;gap:5px;margin-left:auto}
+.cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cdot.g{background:var(--grn)}
+.cdot.y{background:var(--ylw);animation:pulse 1.5s infinite}
+.cdot.r{background:var(--red)}
+.clbl{font-size:10px;color:var(--txt2);font-family:monospace}
+.tb-key{width:36px;height:36px;border-radius:8px;background:var(--surf2);border:1px solid var(--b2);color:var(--txt2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;touch-action:manipulation}
+
+#chatWrap{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative;min-height:0}
+#msgList{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 8px;display:flex;flex-direction:column;gap:2px;overscroll-behavior:contain}
+#msgList::-webkit-scrollbar{display:none}
+#typingBar{min-height:22px;padding:2px 14px;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.tdots span{width:5px;height:5px;background:var(--txt2);border-radius:50%;display:inline-block;animation:td .9s infinite}
+.tdots span:nth-child(2){animation-delay:.15s}
+.tdots span:nth-child(3){animation-delay:.3s}
+#inputBar{background:var(--surf);border-top:1px solid var(--b1);padding:8px 10px;padding-bottom:calc(8px + var(--sb));display:flex;align-items:flex-end;gap:8px;flex-shrink:0}
+#msgInput{flex:1;background:var(--surf2);border:1.5px solid var(--b2);border-radius:22px;padding:10px 14px;font-family:inherit;font-size:15px;color:var(--txt);outline:none;resize:none;max-height:110px;min-height:42px;line-height:1.45;-webkit-appearance:none;transition:border-color .2s;overflow-y:auto}
+#msgInput:focus{border-color:var(--acc)}
+#msgInput::placeholder{color:var(--txt3)}
+.ibtn{width:44px;height:44px;min-width:44px;border-radius:50%;background:var(--surf2);border:1.5px solid var(--b2);color:var(--txt2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:19px;touch-action:manipulation;flex-shrink:0}
+.ibtn:active{background:var(--surf3)}
+.ibtn.dest{background:rgba(255,204,0,.1);border-color:var(--ylw);color:var(--ylw)}
+.ibtn.send{background:var(--acc);border-color:var(--acc);color:#000}
+.ibtn.send:active{background:var(--acc2)}
+
+/* ── BUBBLES ── */
+.mrow{display:flex;flex-direction:column;margin-bottom:1px}
+.mrow.me{align-items:flex-end}
+.mrow.them{align-items:flex-start}
+.mmeta{font-size:10px;color:var(--txt3);margin:0 6px 3px;display:flex;align-items:center;gap:5px}
+.mname{color:var(--txt2);font-weight:500}
+.bubble{max-width:78%;padding:10px 13px;font-size:14.5px;line-height:1.5;word-break:break-word;border:1px solid transparent;animation:bIn .18s ease}
+@media(max-width:380px){.bubble{max-width:88%;font-size:14px}}
+.me .bubble{background:var(--surf2);border-color:var(--acc2);border-radius:14px 14px 3px 14px}
+.them .bubble{background:#1a1f2e;border-color:var(--b2);border-radius:14px 14px 14px 3px}
+.bubble.sd{border-style:dashed!important;border-color:var(--ylw)!important}
+.dtimer{font-size:10px;color:var(--ylw);font-family:monospace;margin-top:5px;display:flex;align-items:center;gap:4px}
+.imgbub{padding:5px!important}
+.imgbub img{max-width:min(260px,70vw);max-height:190px;border-radius:8px;display:block;cursor:pointer}
+.sysmsg{text-align:center;font-size:10px;color:var(--txt3);font-family:monospace;padding:5px 8px;margin:4px 0;display:flex;align-items:center;justify-content:center;gap:8px}
+.sysmsg::before,.sysmsg::after{content:'';flex:1;height:1px;background:var(--b1)}
+#scrollFab{position:absolute;bottom:10px;right:12px;width:38px;height:38px;border-radius:50%;background:var(--acc);color:#000;border:none;cursor:pointer;font-size:18px;display:none;align-items:center;justify-content:center;z-index:10;touch-action:manipulation}
+#scrollFab.show{display:flex}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:flex-end;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surf);border:1px solid var(--b2);border-radius:20px 20px 0 0;padding:20px 20px calc(20px + var(--sb));width:100%;max-width:520px;animation:slideUp .22s ease;max-height:85vh;overflow-y:auto}
+.modal-handle{width:36px;height:4px;background:var(--b2);border-radius:2px;margin:0 auto 16px}
+.fp{font-family:monospace;font-size:9px;color:var(--txt3);word-break:break-all;letter-spacing:.8px;padding:10px;background:var(--bg);border-radius:6px;margin-top:8px;line-height:1.8}
+.mclose{width:100%;padding:13px;background:var(--surf2);border:1px solid var(--b2);border-radius:8px;font-family:monospace;font-size:13px;color:var(--txt2);cursor:pointer;margin-top:16px;touch-action:manipulation}
+
+/* ── IMAGE VIEWER ── */
+#imgViewer{position:fixed;inset:0;background:rgba(0,0,0,.93);display:none;align-items:center;justify-content:center;z-index:300}
+#imgViewer.open{display:flex}
+#ivImg{max-width:96vw;max-height:92vh;border-radius:8px;object-fit:contain}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:calc(80px + var(--sb));left:50%;transform:translateX(-50%);background:var(--surf2);border:1px solid var(--b2);padding:9px 18px;border-radius:22px;font-size:12px;font-family:monospace;color:var(--txt);z-index:500;transition:opacity .3s;white-space:nowrap;pointer-events:none}
+.toast.hide{opacity:0}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes bIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes td{0%,80%,100%{transform:scale(.75);opacity:.4}40%{transform:scale(1.2);opacity:1}}
+@keyframes slideUp{from{transform:translateY(40px)}to{transform:translateY(0)}}
+
+/* ── ANTI-SCREENSHOT ── */
+#blurOverlay{
+  position:fixed;inset:0;z-index:9999;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  background:rgba(10,14,26,.85);
+  display:none;align-items:center;justify-content:center;
+  flex-direction:column;gap:14px;
+  pointer-events:none;
+  transition:opacity .15s;
+}
+#blurOverlay.on{display:flex}
+#blurOverlay .bl-icon{font-size:42px}
+#blurOverlay .bl-txt{font-family:monospace;font-size:13px;color:#445577;letter-spacing:.5px}
+
+/* Watermark canvas overlay — always on top of chat, pointer-events off */
+#watermarkCanvas{
+  position:fixed;inset:0;z-index:9000;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .3s;
+}
+#watermarkCanvas.on{opacity:1}
+
+/* Prevent text selection everywhere */
+#sChat *{
+  -webkit-user-select:none;
+  -moz-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
+/* Allow selecting in the input */
+#msgInput{
+  -webkit-user-select:text!important;
+  -moz-user-select:text!important;
+  user-select:text!important;
+}
+
+/* ── SCREENSHOT WARNING ── */
+#ssWarning{
+  position:fixed;inset:0;z-index:10000;
+  background:rgba(10,14,26,.97);
+  display:none;align-items:center;justify-content:center;
+  flex-direction:column;gap:16px;text-align:center;padding:32px;
+  animation:ssFlash .15s ease;
+}
+#ssWarning.on{display:flex}
+@keyframes ssFlash{from{opacity:0;transform:scale(1.04)}to{opacity:1;transform:scale(1)}}
+#ssWarning .ss-icon{font-size:56px}
+#ssWarning .ss-title{font-family:monospace;font-size:16px;font-weight:700;color:var(--red);letter-spacing:.5px}
+#ssWarning .ss-sub{font-family:monospace;font-size:11px;color:var(--txt3);line-height:1.8;max-width:280px}
+#ssWarning .ss-dismiss{margin-top:8px;padding:13px 28px;background:var(--surf2);border:1.5px solid var(--b2);border-radius:10px;font-family:monospace;font-size:13px;color:var(--txt2);cursor:pointer;touch-action:manipulation}
+</style>
+</head>
+<body>
+
+<!-- LOCK -->
+
+<!-- BLUR OVERLAY (shown on focus loss) -->
+<div id="blurOverlay">
+  <div class="bl-icon">🔒</div>
+  <div class="bl-txt">VAULT LOCKED</div>
+</div>
+
+<!-- SCREENSHOT WARNING -->
+<div id="ssWarning">
+  <div class="ss-icon">📵</div>
+  <div class="ss-title">Screenshot Detected</div>
+  <div class="ss-sub">Screenshots are logged with your name and timestamp via the watermark. This chat is end-to-end encrypted and private.</div>
+  <button class="ss-dismiss" onclick="dismissSSWarning()">I Understand</button>
+</div>
+
+<!-- WATERMARK CANVAS -->
+<canvas id="watermarkCanvas"></canvas>
+
+<div id="sLock" class="screen on">
+  <div class="card">
+    <div class="logo">
+      <div class="logo-box">🔒</div>
+      <div>
+        <div class="logo-title">VaultChat</div>
+        <div class="logo-sub">Encrypted · P2P · No servers</div>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="flabel">Your Name</label>
+      <input class="inp" id="iName" maxlength="20" placeholder="Display name..." autocorrect="off" autocapitalize="words">
+    </div>
+    <div class="fg">
+      <label class="flabel">Secret Key <span style="font-size:9px;color:var(--txt3);text-transform:none;font-weight:400">(both users must match)</span></label>
+      <input class="inp" id="iKey" type="password" placeholder="Shared secret key..." autocomplete="off" spellcheck="false" oninput="onKS()">
+      <div class="kbar" id="kbar"></div>
+    </div>
+    <button class="pbtn" onclick="enterVault()">🔐 Enter Vault</button>
+    <div class="err" id="lockErr"></div>
+    <div class="enc-row">
+      <div class="edot"></div>
+      <span class="enc-lbl">AES-256-GCM · WebRTC P2P</span>
+      <span class="enc-det">No account needed<br>Zero server storage</span>
+    </div>
+  </div>
+</div>
+
+<!-- WAITING / JOIN -->
+<div id="sWait" class="screen">
+  <div class="wait-card">
+    <div class="wait-title">🔗 Connect</div>
+
+    <div style="font-size:10px;color:var(--txt3);font-family:monospace;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px">Your room code</div>
+    <div class="room-code" id="roomCode">····</div>
+    <div class="room-label">Share this with the other person</div>
+
+    <div class="share-row">
+      <button class="share-btn copy-btn-main" onclick="copyRoomCode()">📋 Copy Code</button>
+      <button class="share-btn sms-btn" onclick="shareRoomCode()">📤 Share</button>
+    </div>
+
+    <div class="wait-status" id="waitStatus">
+      <div class="spinner"></div>
+      <span>Waiting for someone to join...</span>
+    </div>
+
+    <div class="or-divider">OR JOIN SOMEONE ELSE</div>
+
+    <div class="join-row">
+      <input class="code-inp" id="joinCodeInp" maxlength="4" placeholder="····" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)">
+      <button class="join-go" onclick="joinRoom()">Join →</button>
+    </div>
+
+    <button class="pbtn ghost" onclick="showScreen('sLock')" style="margin-top:16px">◀ Back</button>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div id="sChat" class="screen">
+  <div id="topbar">
+    <div class="tb-logo">🔒 Vault</div>
+    <div class="tb-room" id="tbRoom">#—</div>
+    <div class="tb-enc">
+      <div class="edot" style="width:6px;height:6px;border-radius:50%;background:var(--grn);animation:pulse 2s infinite;flex-shrink:0"></div>
+      <span>E2E</span>
+    </div>
+    <div class="tb-conn">
+      <div class="cdot y" id="cDot"></div>
+      <span class="clbl" id="cLbl">—</span>
+    </div>
+    <button class="tb-key" onclick="openModal('mKey')">🔑</button>
+  </div>
+  <div id="chatWrap">
+    <div id="msgList"></div>
+    <button id="scrollFab" onclick="scrollBot()">↓</button>
+  </div>
+  <div id="typingBar"></div>
+  <div id="inputBar">
+    <input type="file" id="fileInput" style="display:none" accept="image/*,video/*,*/*" onchange="handleFile(this)">
+    <button class="ibtn" onclick="document.getElementById('fileInput').click()">📎</button>
+    <button class="ibtn" id="destBtn" onclick="toggleDestruct()">💣</button>
+    <textarea id="msgInput" rows="1" placeholder="Message..." oninput="onInput(this)" onkeydown="onKey(event)"></textarea>
+    <button class="ibtn send" onclick="sendMsg()">➤</button>
+  </div>
+</div>
+
+<!-- KEY MODAL -->
+<div class="overlay" id="mKey" onclick="if(event.target===this)closeModal('mKey')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="font-family:monospace;font-size:14px;font-weight:700;color:var(--txt);margin-bottom:14px">🔑 Session Info</div>
+    <div style="font-size:12px;color:var(--txt2);line-height:1.8;margin-bottom:12px">
+      Direct <strong style="color:var(--txt)">WebRTC P2P</strong> connection. Messages encrypted with <strong style="color:var(--txt)">AES-256-GCM</strong> before leaving your device. Key via PBKDF2 (100k rounds, SHA-256). The signaling server only sees your room number — never your messages or key.
+    </div>
+    <div style="font-size:10px;color:var(--txt3);font-family:monospace;margin-bottom:4px">KEY FINGERPRINT</div>
+    <div class="fp" id="fpDisplay">—</div>
+    <div style="font-size:10px;color:var(--txt3);margin-top:10px;line-height:1.6">Both users see the same fingerprint when keys match. Verify with each other to confirm.</div>
+    <button class="mclose" onclick="closeModal('mKey')">Close</button>
+  </div>
+</div>
+
+<!-- IMAGE VIEWER -->
+<div id="imgViewer" onclick="closeImgViewer()">
+  <img id="ivImg" src="" alt="">
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  CRYPTO
+// ═══════════════════════════════════════
+async function deriveKey(secret) {
+  const enc = new TextEncoder();
+  const raw = await crypto.subtle.importKey('raw', enc.encode(secret), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt:enc.encode('vaultchat-2025'), iterations:100000, hash:'SHA-256' },
+    raw, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']
+  );
+}
+async function encrypt(key, plain) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM',iv}, key, new TextEncoder().encode(plain));
+  const out = new Uint8Array(12 + ct.byteLength);
+  out.set(iv,0); out.set(new Uint8Array(ct),12);
+  return btoa(String.fromCharCode(...out));
+}
+async function decrypt(key, b64) {
+  try {
+    const b = Uint8Array.from(atob(b64), c=>c.charCodeAt(0));
+    const dec = await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(0,12)}, key, b.slice(12));
+    return new TextDecoder().decode(dec);
+  } catch { return null; }
+}
+async function makeFingerprint(secret) {
+  const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('vcfp:'+secret));
+  return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+let cryptoKey=null, myName='', myFP='';
+let pc=null, dc=null;
+let myRoomCode='', isHost=false;
+let destructMode=false, atBot=true;
+let typingTimer=null, typingSent=false;
+const typingPeers={};
+
+// Free public WebRTC signaling via PeerJS cloud
+// PeerJS handles the handshake only — messages go P2P
+let peer=null;
+
+// ═══════════════════════════════════════
+//  KEY STRENGTH
+// ═══════════════════════════════════════
+function onKS() {
+  const v=document.getElementById('iKey').value;
+  let s=0;
+  if(v.length>=8)s++; if(v.length>=16)s++;
+  if(/[A-Z]/.test(v))s++; if(/[0-9]/.test(v))s++; if(/[^A-Za-z0-9]/.test(v))s++;
+  const ws=['0%','20%','40%','60%','80%','100%'];
+  const cs=['','#ff4466','#ff8844','#ffcc00','#88dd00','#00ff88'];
+  const b=document.getElementById('kbar');
+  b.style.width=ws[s]; b.style.background=cs[s];
+}
+
+// ═══════════════════════════════════════
+//  ENTER VAULT
+// ═══════════════════════════════════════
+async function enterVault() {
+  const name=document.getElementById('iName').value.trim();
+  const secret=document.getElementById('iKey').value;
+  const err=document.getElementById('lockErr');
+  if(!name){err.textContent='Enter your name.';return;}
+  if(secret.length<6){err.textContent='Key must be at least 6 characters.';return;}
+  err.textContent='Generating secure room...';
+  myName=name;
+  try {
+    cryptoKey=await deriveKey(secret);
+    myFP=await makeFingerprint(secret);
+    document.getElementById('fpDisplay').textContent=myFP.match(/.{1,8}/g).join(' ');
+  } catch { err.textContent='Crypto failed. Use a modern browser.'; return; }
+  err.textContent='';
+  initPeer();
+}
+
+// ═══════════════════════════════════════
+//  PEERJS SIGNALING
+//  PeerJS cloud = free signaling only.
+//  After connection, all data is WebRTC P2P.
+//  The server NEVER sees message content.
+// ═══════════════════════════════════════
+function initPeer() {
+  // Generate a 4-digit room code, use it as part of PeerJS ID
+  myRoomCode = String(Math.floor(1000 + Math.random() * 9000));
+  // PeerJS ID = "vc-" + random suffix so it's unique but room code is short/shareable
+  const peerId = 'vc-' + myRoomCode + '-' + Math.random().toString(36).slice(2,8);
+
+  document.getElementById('roomCode').textContent = myRoomCode;
+  showScreen('sWait');
+
+  peer = new Peer(peerId, {
+    // Use PeerJS free cloud (no account needed)
+    host: '0.peerjs.com',
+    port: 443,
+    path: '/',
+    secure: true,
+    debug: 0
+  });
+
+  peer.on('open', id => {
+    document.getElementById('waitStatus').innerHTML =
+      `<div class="spinner"></div><span>Waiting for someone with code <strong style="color:var(--grn)">${myRoomCode}</strong>...</span>`;
+  });
+
+  peer.on('connection', conn => {
+    setupConn(conn, false);
+  });
+
+  peer.on('error', err => {
+    if(err.type === 'peer-unavailable') {
+      toast('That room code was not found. Check the code and try again.');
+      document.getElementById('waitStatus').innerHTML = `<span style="color:var(--red)">⚠ Could not find that room</span>`;
+    } else {
+      toast('Connection error: ' + err.type);
+    }
+  });
+}
+
+function joinRoom() {
+  const code = document.getElementById('joinCodeInp').value.trim();
+  if(code.length !== 4) { toast('Enter a 4-digit code'); return; }
+
+  document.getElementById('waitStatus').innerHTML =
+    `<div class="spinner"></div><span>Connecting to room <strong style="color:var(--grn)">${code}</strong>...</span>`;
+
+  // We need to find the peer with that room code prefix
+  // We connect using a discovery approach: try connecting to the host's peer ID
+  // Since host ID starts with "vc-XXXX-", we broadcast to that known prefix pattern
+  // Solution: use a fixed well-known suffix for the host when they create a room
+  // Host ID = "vc-XXXX-host", Joiner connects to that exact ID
+  const targetId = 'vc-' + code + '-host';
+
+  if(!peer) {
+    // Joiner creates their own peer first
+    peer = new Peer('vc-' + myRoomCode + '-join-' + Math.random().toString(36).slice(2,6), {
+      host: '0.peerjs.com', port:443, path:'/', secure:true, debug:0
+    });
+    peer.on('open', () => {
+      const conn = peer.connect(targetId, { reliable:true });
+      setupConn(conn, true);
+    });
+    peer.on('error', e => {
+      if(e.type==='peer-unavailable') toast('Room not found. Check the code — the other person must have the app open.');
+      else toast('Error: ' + e.type);
+    });
+  } else {
+    const conn = peer.connect(targetId, { reliable:true });
+    setupConn(conn, true);
+  }
+}
+
+// Re-init with deterministic host ID so joiners can find it
+function initPeerAsHost(code) {
+  myRoomCode = code;
+  const peerId = 'vc-' + code + '-host';
+
+  peer = new Peer(peerId, {
+    host:'0.peerjs.com', port:443, path:'/', secure:true, debug:0
+  });
+
+  peer.on('open', () => {
+    document.getElementById('roomCode').textContent = myRoomCode;
+    document.getElementById('waitStatus').innerHTML =
+      `<div class="spinner"></div><span>Waiting for someone with code <strong style="color:var(--grn)">${myRoomCode}</strong>...</span>`;
+  });
+
+  peer.on('connection', conn => setupConn(conn, false));
+
+  peer.on('error', err => {
+    if(err.type === 'unavailable-id') {
+      // Code already taken, generate a new one
+      const newCode = String(Math.floor(1000 + Math.random()*9000));
+      if(peer){peer.destroy();peer=null;}
+      initPeerAsHost(newCode);
+    } else {
+      toast('Error: ' + err.type);
+    }
+  });
+}
+
+// Rewrite enterVault flow to use deterministic host ID
+async function enterVault() {
+  const name=document.getElementById('iName').value.trim();
+  const secret=document.getElementById('iKey').value;
+  const err=document.getElementById('lockErr');
+  if(!name){err.textContent='Enter your name.';return;}
+  if(secret.length<6){err.textContent='Key must be at least 6 characters.';return;}
+  err.textContent='';
+  myName=name;
+  try {
+    cryptoKey=await deriveKey(secret);
+    myFP=await makeFingerprint(secret);
+    document.getElementById('fpDisplay').textContent=myFP.match(/.{1,8}/g).join(' ');
+  } catch { err.textContent='Crypto failed.'; return; }
+
+  showScreen('sWait');
+  document.getElementById('roomCode').textContent='····';
+
+  const code = String(Math.floor(1000 + Math.random()*9000));
+  initPeerAsHost(code);
+}
+
+// ═══════════════════════════════════════
+//  CONNECTION SETUP
+// ═══════════════════════════════════════
+function setupConn(conn, iJoined) {
+  conn.on('open', () => {
+    dc = conn;
+    document.getElementById('tbRoom').textContent = '#' + myRoomCode;
+    document.getElementById('cDot').className = 'cdot g';
+    document.getElementById('cLbl').textContent = 'Connected';
+    showScreen('sChat');
+    sysMsg('🔐 Connected · AES-256-GCM active');
+    sysMsg('🌐 Direct P2P · No server can read your messages');
+    startWatermark(myName);
+    conn.send(JSON.stringify({type:'hello', name:myName}));
+  });
+  conn.on('data', raw => onData(raw));
+  conn.on('close', () => {
+    document.getElementById('cDot').className='cdot r';
+    document.getElementById('cLbl').textContent='Disconnected';
+    sysMsg('⚠ Connection closed');
+  });
+  conn.on('error', e => { toast('Connection error'); console.error(e); });
+}
+
+function sendRaw(obj) {
+  if(dc && dc.open) dc.send(JSON.stringify(obj));
+}
+
+// ═══════════════════════════════════════
+//  DATA HANDLER
+// ═══════════════════════════════════════
+async function onData(raw) {
+  let msg; try{msg=JSON.parse(raw);}catch{return;}
+  if(msg.type==='hello'){sysMsg('👤 '+msg.name+' joined');return;}
+  if(msg.type==='typing'){
+    if(msg.on)typingPeers[msg.name]=Date.now();
+    else delete typingPeers[msg.name];
+    renderTyping();return;
+  }
+  if(msg.type==='chunk'){
+    await handleChunkMsg(msg);
+    if(!atBot)document.getElementById('scrollFab').classList.add('show');
+    return;
+  }
+  if(msg.type==='msg'){
+    const dec=await decrypt(cryptoKey,msg.enc);
+    if(!dec){sysMsg('⚠ Decrypt failed (wrong key?)');return;}
+    try{
+      const p=JSON.parse(dec);
+      renderBubble({name:msg.name,...p},false);
+      if(!atBot)document.getElementById('scrollFab').classList.add('show');
+    }catch{}
+  }
+}
+
+// ═══════════════════════════════════════
+//  SHARE / COPY ROOM CODE
+// ═══════════════════════════════════════
+function copyRoomCode() {
+  const code = document.getElementById('roomCode').textContent;
+  if(code==='····'){toast('Code still generating...');return;}
+  const msg = `Join my VaultChat room! Code: ${code}\nApp: ${location.href}`;
+  navigator.clipboard.writeText(msg).then(()=>toast('Copied!')).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=msg;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+    toast('Copied!');
+  });
+}
+function shareRoomCode() {
+  const code=document.getElementById('roomCode').textContent;
+  if(code==='····'){toast('Code still generating...');return;}
+  const shareData={title:'VaultChat',text:`Join my encrypted chat! Room code: ${code}`,url:location.href};
+  if(navigator.share){navigator.share(shareData).catch(()=>copyRoomCode());}
+  else copyRoomCode();
+}
+
+// ═══════════════════════════════════════
+//  MESSAGING
+// ═══════════════════════════════════════
+async function sendMsg() {
+  const inp=document.getElementById('msgInput');
+  const text=inp.value.trim();
+  if(!text)return;
+  inp.value='';inp.style.height='auto';inp.focus();
+  const ts=Date.now(),ds=destructMode?10:0;
+  try{
+    const enc=await encrypt(cryptoKey,JSON.stringify({text,type:'text',ds,ts}));
+    sendRaw({type:'msg',name:myName,enc});
+    renderBubble({name:myName,text,type:'text',ds,ts},true);
+    scrollBot();
+  }catch{sysMsg('⚠ Encryption failed');}
+}
+
+function onInput(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,110)+'px';
+  if(!typingSent){typingSent=true;sendRaw({type:'typing',name:myName,on:true});}
+  clearTimeout(typingTimer);
+  typingTimer=setTimeout(()=>{typingSent=false;sendRaw({type:'typing',name:myName,on:false});},2000);
+}
+function onKey(e){
+  const mob=window.innerWidth<=768||('ontouchstart' in window);
+  if(e.key==='Enter'&&!e.shiftKey&&!mob){e.preventDefault();sendMsg();}
+}
+function renderTyping(){
+  const bar=document.getElementById('typingBar');
+  const names=Object.keys(typingPeers).filter(n=>Date.now()-typingPeers[n]<4000);
+  if(!names.length){bar.innerHTML='';return;}
+  const lbl=names.length===1?names[0]+' is typing':names.join(', ')+' are typing';
+  bar.innerHTML=`<div class="tdots" style="display:flex;gap:3px;align-items:center"><span></span><span></span><span></span></div><span style="font-size:11px;color:var(--txt2);font-family:monospace;margin-left:6px">${lbl}</span>`;
+}
+setInterval(()=>{
+  Object.keys(typingPeers).forEach(k=>{if(Date.now()-typingPeers[k]>4000)delete typingPeers[k];});
+  renderTyping();
+},2000);
+
+// ═══════════════════════════════════════
+//  FILE / IMAGE — CHUNKED TRANSFER
+//  Splits large files into 64KB chunks,
+//  encrypts each chunk individually,
+//  reassembles on the other side.
+//  Supports images up to ~50MB.
+// ═══════════════════════════════════════
+const CHUNK_SIZE = 64 * 1024; // 64KB per chunk
+const inboundTransfers = {}; // transferId -> { chunks, total, meta }
+
+async function compressImage(file, mW, mH, q) {
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width:w, height:h } = img;
+      // For big photos scale to 2400px max (high quality but manageable)
+      if (w > mW || h > mH) {
+        const r = Math.min(mW/w, mH/h);
+        w = Math.round(w*r); h = Math.round(h*r);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+      canvas.toBlob(blob => {
+        if (!blob) { rej(new Error('toBlob failed')); return; }
+        const reader = new FileReader();
+        reader.onload = e => res({ dataUrl: e.target.result, size: blob.size });
+        reader.onerror = rej;
+        reader.readAsDataURL(blob);
+      }, mime, mime === 'image/png' ? 1 : q);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('Load failed')); };
+    img.src = url;
+  });
+}
+
+function fmtSize(b) {
+  if (b < 1024) return b+'B';
+  if (b < 1048576) return (b/1024).toFixed(1)+'KB';
+  return (b/1048576).toFixed(1)+'MB';
+}
+
+// Split a base64 dataUrl into chunks and send them encrypted
+async function sendChunked(dataUrl, meta) {
+  const transferId = Math.random().toString(36).slice(2, 10);
+  const totalChunks = Math.ceil(dataUrl.length / CHUNK_SIZE);
+
+  // Send header first
+  const headerEnc = await encrypt(cryptoKey, JSON.stringify({
+    type: 'transfer_start',
+    transferId,
+    totalChunks,
+    ...meta
+  }));
+  sendRaw({ type: 'chunk', name: myName, enc: headerEnc });
+
+  // Add progress bubble on sender side immediately
+  const progressId = 'prog_' + transferId;
+  addProgressBubble(progressId, meta.filename || 'image', totalChunks, true);
+
+  // Send chunks with small delay between to avoid overwhelming DataChannel buffer
+  for (let i = 0; i < totalChunks; i++) {
+    const chunk = dataUrl.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+    const enc = await encrypt(cryptoKey, JSON.stringify({
+      type: 'transfer_chunk',
+      transferId,
+      index: i,
+      data: chunk,
+      total: totalChunks
+    }));
+    sendRaw({ type: 'chunk', name: myName, enc });
+    updateProgressBubble(progressId, i + 1, totalChunks, true);
+
+    // Yield to browser every 8 chunks to keep UI responsive
+    if (i % 8 === 7) await new Promise(r => setTimeout(r, 10));
+  }
+}
+
+// Receive a chunk message
+async function handleChunkMsg(msg) {
+  const dec = await decrypt(cryptoKey, msg.enc);
+  if (!dec) { sysMsg('⚠ Chunk decrypt failed'); return; }
+  const p = JSON.parse(dec);
+
+  if (p.type === 'transfer_start') {
+    inboundTransfers[p.transferId] = {
+      chunks: new Array(p.totalChunks),
+      received: 0,
+      total: p.totalChunks,
+      meta: { filename: p.filename, size: p.size, isImg: p.isImg, ts: p.ts }
+    };
+    // Show progress bubble for receiver
+    addProgressBubble('prog_' + p.transferId, p.filename || 'image', p.totalChunks, false);
+    return;
+  }
+
+  if (p.type === 'transfer_chunk') {
+    const t = inboundTransfers[p.transferId];
+    if (!t) return;
+    t.chunks[p.index] = p.data;
+    t.received++;
+    updateProgressBubble('prog_' + p.transferId, t.received, t.total, false);
+
+    if (t.received === t.total) {
+      // All chunks received — reassemble
+      const dataUrl = t.chunks.join('');
+      delete inboundTransfers[p.transferId];
+      finishTransfer('prog_' + p.transferId, dataUrl, t.meta, msg.name);
+    }
+  }
+}
+
+function addProgressBubble(id, filename, totalChunks, mine) {
+  // Remove any existing "Sending..." sys msgs
+  document.querySelectorAll('.sysmsg').forEach(m => { if (m.textContent.includes('📤')) m.remove(); });
+
+  const list = document.getElementById('msgList');
+  const row = document.createElement('div');
+  row.className = 'mrow ' + (mine ? 'me' : 'them');
+  row.id = id;
+
+  const meta = document.createElement('div');
+  meta.className = 'mmeta';
+  meta.innerHTML = mine ? '<span>Now</span>' : `<span class="mname">${esc(myName !== filename ? filename : 'Them')}</span>`;
+
+  const bub = document.createElement('div');
+  bub.className = 'bubble';
+  bub.style.minWidth = '160px';
+  bub.innerHTML = `
+    <div style="font-size:12px;color:var(--txt2);margin-bottom:8px">${mine ? '📤' : '📥'} ${mine ? 'Sending' : 'Receiving'} ${esc(filename)}</div>
+    <div style="background:var(--b1);border-radius:4px;height:6px;overflow:hidden">
+      <div id="${id}_bar" style="height:100%;width:0%;background:var(--acc);transition:width .3s;border-radius:4px"></div>
+    </div>
+    <div id="${id}_pct" style="font-size:10px;color:var(--txt3);font-family:monospace;margin-top:5px">0%</div>
+  `;
+  row.appendChild(meta); row.appendChild(bub);
+  list.appendChild(row);
+  if (atBot) scrollBot();
+}
+
+function updateProgressBubble(id, received, total, mine) {
+  const pct = Math.round((received / total) * 100);
+  const bar = document.getElementById(id + '_bar');
+  const lbl = document.getElementById(id + '_pct');
+  if (bar) bar.style.width = pct + '%';
+  if (lbl) lbl.textContent = pct + '% · ' + received + '/' + total + ' chunks';
+}
+
+function finishTransfer(id, dataUrl, meta, senderName) {
+  // Replace progress bubble with real content
+  const existing = document.getElementById(id);
+  if (existing) existing.remove();
+  renderBubble({
+    name: senderName || myName,
+    type: meta.isImg ? 'image' : 'file',
+    dataUrl,
+    filename: meta.filename,
+    size: meta.size,
+    ds: 0,
+    ts: meta.ts || Date.now()
+  }, senderName === myName);
+  scrollBot();
+}
+
+async function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  const isImg = file.type.startsWith('image/');
+
+  // Limits: images 100MB, files 20MB
+  if (!isImg && file.size > 20 * 1024 * 1024) { toast('⚠ Max 20MB for files'); return; }
+  if (isImg && file.size > 100 * 1024 * 1024) { toast('⚠ Max 100MB for images'); return; }
+
+  sysMsg('📤 Preparing ' + fmtSize(file.size) + ' ' + (isImg ? 'image' : 'file') + '...');
+
+  try {
+    let dataUrl, displaySize;
+    if (isImg) {
+      // Scale to max 2400px — keeps quality high for large photos
+      const c = await compressImage(file, 2400, 2400, 0.9);
+      dataUrl = c.dataUrl;
+      displaySize = fmtSize(c.size);
+    } else {
+      dataUrl = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = e => res(e.target.result); r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+      displaySize = fmtSize(file.size);
+    }
+
+    const meta = { filename: file.name, size: displaySize, isImg, ts: Date.now() };
+
+    // Use chunked transfer for anything over 32KB
+    if (dataUrl.length > 32 * 1024) {
+      await sendChunked(dataUrl, meta);
+    } else {
+      // Small file — send as single encrypted message (old path)
+      const payload = { type: isImg ? 'image' : 'file', dataUrl, ...meta, ds: 0 };
+      const enc = await encrypt(cryptoKey, JSON.stringify(payload));
+      sendRaw({ type: 'msg', name: myName, enc });
+      document.querySelectorAll('.sysmsg').forEach(m => { if (m.textContent.includes('📤')) m.remove(); });
+      renderBubble({ name: myName, ...payload }, true);
+      scrollBot();
+    }
+  } catch(e) {
+    sysMsg('⚠ Failed: ' + e.message);
+    console.error(e);
+  }
+}
+
+// ═══════════════════════════════════════
+//  RENDER BUBBLES
+// ═══════════════════════════════════════
+function renderBubble(data,mine){
+  const list=document.getElementById('msgList');
+  const row=document.createElement('div');
+  row.className='mrow '+(mine?'me':'them');
+  const time=new Date(data.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const meta=document.createElement('div');
+  meta.className='mmeta';
+  meta.innerHTML=!mine?`<span class="mname">${esc(data.name)}</span><span>${time}</span>`:`<span>${time}</span>`;
+  const bub=document.createElement('div');
+  if(data.type==='image'){
+    bub.className='bubble imgbub';
+    const img=document.createElement('img');
+    img.src=data.dataUrl;img.alt='image';
+    img.onclick=()=>openImgViewer(data.dataUrl);
+    img.onerror=()=>{img.style.display='none';const e=document.createElement('div');e.style.cssText='font-size:11px;color:var(--red);font-family:monospace;padding:4px';e.textContent='⚠ Image failed';bub.appendChild(e);};
+    bub.appendChild(img);
+  }else if(data.type==='file'){
+    bub.className='bubble';
+    bub.innerHTML=`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:24px">📎</span><div style="flex:1;min-width:0"><div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(data.filename)}</div><div style="font-size:10px;color:var(--txt2)">${data.size}</div><a href="${data.dataUrl}" download="${esc(data.filename)}" style="font-size:11px;color:var(--acc);text-decoration:none;display:inline-block;margin-top:4px;padding:4px 10px;background:rgba(0,212,255,.1);border-radius:6px;border:1px solid rgba(0,212,255,.25)">⬇ Save</a></div></div>`;
+  }else{
+    bub.className='bubble'+(data.ds?' sd':'');
+    bub.innerHTML=`<span>${esc(data.text)}</span>`;
+    if(data.ds){
+      const dt=document.createElement('div');dt.className='dtimer';
+      dt.innerHTML=`💣 <span class="dc">${data.ds}s</span>`;
+      bub.appendChild(dt);startDestruct(bub,row,data.ds);
+    }
+  }
+  row.appendChild(meta);row.appendChild(bub);
+  list.appendChild(row);
+  if(atBot)scrollBot();
+}
+function startDestruct(bub,row,secs){
+  let n=secs;const el=bub.querySelector('.dc');
+  const iv=setInterval(()=>{n--;if(el)el.textContent=n+'s';if(n<=0){clearInterval(iv);row.style.transition='opacity .5s';row.style.opacity='0';setTimeout(()=>row.remove(),550);}},1000);
+}
+function sysMsg(txt){
+  const list=document.getElementById('msgList');
+  const el=document.createElement('div');el.className='sysmsg';el.textContent=txt;
+  list.appendChild(el);if(atBot)scrollBot();
+}
+function scrollBot(){
+  const l=document.getElementById('msgList');l.scrollTop=l.scrollHeight;
+  document.getElementById('scrollFab').classList.remove('show');
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const l=document.getElementById('msgList');
+  if(l)l.addEventListener('scroll',()=>{
+    atBot=l.scrollHeight-l.scrollTop-l.clientHeight<50;
+    if(atBot)document.getElementById('scrollFab').classList.remove('show');
+  },{passive:true});
+});
+
+// ═══════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');}
+function toggleDestruct(){destructMode=!destructMode;document.getElementById('destBtn').className='ibtn'+(destructMode?' dest':'');toast(destructMode?'💣 Self-destruct ON (10s)':'💣 Self-destruct OFF');}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function openImgViewer(src){document.getElementById('ivImg').src=src;document.getElementById('imgViewer').classList.add('open');}
+function closeImgViewer(){document.getElementById('imgViewer').classList.remove('open');}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+let toastT=null;
+function toast(msg){
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;
+  document.body.appendChild(t);clearTimeout(toastT);
+  toastT=setTimeout(()=>{t.classList.add('hide');setTimeout(()=>t.remove(),400);},2600);
+}
+
+// iOS keyboard fix
+function fixVH(){const h=window.visualViewport?window.visualViewport.height:window.innerHeight;document.body.style.height=h+'px';}
+if(window.visualViewport){window.visualViewport.addEventListener('resize',fixVH);window.visualViewport.addEventListener('scroll',fixVH);}
+window.addEventListener('resize',fixVH);fixVH();
+
+// Enter on lock inputs
+document.getElementById('iName').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('iKey').focus();}});
+document.getElementById('iKey').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();enterVault();}});
+document.getElementById('joinCodeInp').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();joinRoom();}});
+
+// ═══════════════════════════════════════
+//  ANTI-SCREENSHOT / PRIVACY SHIELD
+// ═══════════════════════════════════════
+
+// ── 1. Blur on focus loss ──
+let blurTimeout = null;
+function lockScreen() {
+  const overlay = document.getElementById('blurOverlay');
+  if (overlay) overlay.classList.add('on');
+}
+function unlockScreen() {
+  clearTimeout(blurTimeout);
+  const overlay = document.getElementById('blurOverlay');
+  if (overlay) overlay.classList.remove('on');
+}
+// Page visibility (tab switch, phone lock button)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') lockScreen();
+  else blurTimeout = setTimeout(unlockScreen, 300);
+});
+// Window blur (alt-tab, screenshot tool opening)
+window.addEventListener('blur', () => {
+  blurTimeout = setTimeout(lockScreen, 80);
+});
+window.addEventListener('focus', () => {
+  clearTimeout(blurTimeout);
+  blurTimeout = setTimeout(unlockScreen, 300);
+});
+// Page hide (mobile browser minimize)
+window.addEventListener('pagehide', lockScreen);
+window.addEventListener('pageshow', () => { blurTimeout = setTimeout(unlockScreen, 300); });
+
+// ── 2. Block right-click ──
+document.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  return false;
+});
+
+// ── 3. Block common devtools shortcuts ──
+document.addEventListener('keydown', e => {
+  // F12
+  if (e.key === 'F12') { e.preventDefault(); return false; }
+  // Ctrl+Shift+I / Cmd+Opt+I (devtools)
+  if ((e.ctrlKey||e.metaKey) && e.shiftKey && (e.key==='I'||e.key==='i')) { e.preventDefault(); return false; }
+  // Ctrl+Shift+J (console)
+  if ((e.ctrlKey||e.metaKey) && e.shiftKey && (e.key==='J'||e.key==='j')) { e.preventDefault(); return false; }
+  // Ctrl+Shift+C (inspect element)
+  if ((e.ctrlKey||e.metaKey) && e.shiftKey && (e.key==='C'||e.key==='c')) { e.preventDefault(); return false; }
+  // Ctrl+U (view source)
+  if ((e.ctrlKey||e.metaKey) && (e.key==='U'||e.key==='u')) { e.preventDefault(); return false; }
+  // Ctrl+S (save page)
+  if ((e.ctrlKey||e.metaKey) && (e.key==='S'||e.key==='s')) { e.preventDefault(); return false; }
+  // Ctrl+A (select all — block in chat only)
+  if ((e.ctrlKey||e.metaKey) && (e.key==='A'||e.key==='a')) {
+    if (document.activeElement !== document.getElementById('msgInput')) {
+      e.preventDefault(); return false;
+    }
+  }
+});
+
+// ── 4. Devtools size detection (desktop) ──
+// Fires when devtools opens and resizes the window
+let devtoolsOpen = false;
+function checkDevtools() {
+  const threshold = 160;
+  const widthDiff = window.outerWidth - window.innerWidth;
+  const heightDiff = window.outerHeight - window.innerHeight;
+  if (widthDiff > threshold || heightDiff > threshold) {
+    if (!devtoolsOpen) {
+      devtoolsOpen = true;
+      lockScreen();
+      // Optionally clear messages from DOM for extra protection
+      // document.getElementById('msgList').innerHTML = '';
+    }
+  } else {
+    if (devtoolsOpen) {
+      devtoolsOpen = false;
+      blurTimeout = setTimeout(unlockScreen, 400);
+    }
+  }
+}
+setInterval(checkDevtools, 1000);
+
+// ── 5. Watermark ──
+// Draws a semi-transparent diagonal watermark over the chat area
+// showing the viewer's name + timestamp — so screenshots are identifiable
+let watermarkName = '';
+let watermarkInterval = null;
+
+function startWatermark(name) {
+  watermarkName = name;
+  const canvas = document.getElementById('watermarkCanvas');
+  if (!canvas) return;
+  canvas.classList.add('on');
+  drawWatermark();
+  // Redraw every 30s so timestamp stays fresh
+  clearInterval(watermarkInterval);
+  watermarkInterval = setInterval(drawWatermark, 30000);
+}
+
+function drawWatermark() {
+  const canvas = document.getElementById('watermarkCanvas');
+  if (!canvas || !watermarkName) return;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const now = new Date().toLocaleString();
+  const text = `${watermarkName} · ${now} · VaultChat`;
+
+  ctx.save();
+  ctx.globalAlpha = 0.055;
+  ctx.fillStyle = '#8899bb';
+  ctx.font = '13px monospace';
+
+  // Rotate and tile diagonally
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate(-28 * Math.PI / 180);
+
+  const spacingX = 280;
+  const spacingY = 90;
+  const cols = Math.ceil(canvas.width / spacingX) + 3;
+  const rows = Math.ceil(canvas.height / spacingY) + 6;
+
+  for (let r = -rows; r < rows; r++) {
+    for (let c = -cols; c < cols; c++) {
+      ctx.fillText(text, c * spacingX, r * spacingY);
+    }
+  }
+  ctx.restore();
+}
+
+// Redraw watermark on resize
+window.addEventListener('resize', () => { if (watermarkName) drawWatermark(); });
+
+
+// ── 6. Screenshot detection ──
+// Uses Print API + key combos + clipboard events to detect screenshot attempts
+let ssWarningActive = false;
+
+function triggerSSWarning() {
+  if (!watermarkName) return; // Only warn when in a chat
+  if (ssWarningActive) return;
+  ssWarningActive = true;
+  lockScreen();
+  const w = document.getElementById('ssWarning');
+  if (w) w.classList.add('on');
+  // Log it to chat
+  sysMsg('📵 Screenshot attempt detected · ' + new Date().toLocaleTimeString());
+}
+
+function dismissSSWarning() {
+  ssWarningActive = false;
+  const w = document.getElementById('ssWarning');
+  if (w) w.classList.remove('on');
+  blurTimeout = setTimeout(unlockScreen, 300);
+}
+
+// Print dialog = common screenshot method (Ctrl+P then print to PDF)
+window.addEventListener('beforeprint', triggerSSWarning);
+window.addEventListener('afterprint', dismissSSWarning);
+
+// Ctrl+P block + warning
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && (e.key==='P'||e.key==='p')) {
+    e.preventDefault();
+    triggerSSWarning();
+    return false;
+  }
+  // Windows Snipping Tool shortcut Win+Shift+S (we can't fully block but can warn on Shift+S combos)
+  if (e.key === 'PrintScreen') {
+    triggerSSWarning();
+    return false;
+  }
+}, true);
+
+// Clipboard write detection — if something gets copied to clipboard unexpectedly
+document.addEventListener('copy', e => {
+  if (document.activeElement !== document.getElementById('msgInput')) {
+    e.preventDefault();
+    return false;
+  }
+});
+document.addEventListener('cut', e => {
+  if (document.activeElement !== document.getElementById('msgInput')) {
+    e.preventDefault();
+  }
+});
+
+// iOS: Screenshot fires a resize-then-restore very briefly
+// Detect rapid resize that returns to same dimensions
+let lastW = window.innerWidth, lastH = window.innerHeight;
+let resizeReturns = 0, resizeTimer = null;
+window.addEventListener('resize', () => {
+  const nw = window.innerWidth, nh = window.innerHeight;
+  if (nw === lastW && nh === lastH) {
+    resizeReturns++;
+    if (resizeReturns >= 2 && watermarkName) triggerSSWarning();
+  } else {
+    resizeReturns = 0;
+    lastW = nw; lastH = nh;
+  }
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { resizeReturns = 0; }, 1500);
+});
+
+
+</script>
+
+<!-- PeerJS for signaling only -->
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</body>
+</html>
